@@ -79,6 +79,7 @@ private fun ClothingItemDto.toDomain(localDataSource: ClothingLocalDataSource): 
     rating = savedRating?.let {
       Rating(value = it.rating, count = rating.count + 1)
     } ?: Rating(value = rating.value, count = rating.count),
+    likes = likes,
     isFavorite = localDataSource.isFavorite(id),
     userComment = comment
   )

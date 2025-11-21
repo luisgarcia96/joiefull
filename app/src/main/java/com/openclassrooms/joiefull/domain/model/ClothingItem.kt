@@ -12,6 +12,7 @@ data class ClothingItem(
   val imageUrl: String,
   val category: Category,
   val rating: Rating,
+  val likes: Int,
   val isFavorite: Boolean,
   val userComment: String? = null
 )

@@ -17,7 +17,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import com.openclassrooms.joiefull.domain.model.ClothingItem
-import com.openclassrooms.joiefull.presentation.components.AppTopBar
 import com.openclassrooms.joiefull.presentation.components.CategorySection
 
 @Composable
@@ -32,9 +31,10 @@ fun HomeScreen(
     WindowWidthSizeClass.Medium -> 2
     else -> 4
   }
+  val textStyles = rememberHomeTextStyles(windowSizeClass)
 
   Scaffold(
-    topBar = { AppTopBar(title = "Joiefull") }
+    topBar = {}
   ) { innerPadding ->
     if (uiState.isLoading) {
       Box(
@@ -61,6 +61,7 @@ fun HomeScreen(
           CategorySection(
             section = section,
             columns = columns,
+            textStyles = textStyles,
             onProductClick = onProductClick,
             onToggleFavorite = onToggleFavorite
           )
