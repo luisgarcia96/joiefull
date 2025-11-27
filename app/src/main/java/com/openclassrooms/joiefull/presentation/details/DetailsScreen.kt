@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -20,7 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Person
@@ -51,6 +50,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.graphics.Color
@@ -81,7 +81,23 @@ fun DetailsScreen(
   onSaveRating: () -> Unit,
   onToggleFavorite: () -> Unit
 ) {
+  val configuration = LocalConfiguration.current
   val context = LocalContext.current
+
+  if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
+    FullscreenDetailsContent(
+      uiState = uiState,
+      windowSizeClass = windowSizeClass,
+      onBack = onBack,
+      onShare = { onShare(context) },
+      onRatingSelected = onRatingSelected,
+      onCommentChanged = onCommentChanged,
+      onSaveRating = onSaveRating,
+      onToggleFavorite = onToggleFavorite
+    )
+    return
+  }
+
   val drawerState = rememberDrawerState(initialValue = DrawerValue.Open)
 
   LaunchedEffect(drawerState) {
@@ -133,19 +149,20 @@ private fun DetailsDrawerContent(
   onToggleFavorite: () -> Unit
 ) {
   val scrollState = rememberScrollState()
+  val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
   Scaffold(
     topBar = {},
     containerColor = Color.White,
     contentColor = MaterialTheme.colorScheme.onSurface
   ) { innerPadding ->
-    BoxWithConstraints(
+    Box(
       modifier = Modifier
         .fillMaxSize()
         .padding(innerPadding)
     ) {
       val isWideContent =
-        maxWidth >= 760.dp && windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
+        screenWidth >= 760.dp && windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
       when {
         uiState.isLoading -> {
           Column(
@@ -270,7 +287,7 @@ private fun DetailsCard(
       ) {
         IconPill(
           onClick = onBack,
-          icon = Icons.Outlined.ArrowBack,
+          icon = Icons.AutoMirrored.Outlined.ArrowBack,
           contentDescription = "Revenir à la liste"
         )
         IconPill(
@@ -480,6 +497,36 @@ fun DetailsDrawerPanel(
     tonalElevation = 0.dp,
     shadowElevation = 0.dp,
     shape = RoundedCornerShape(topStart = 28.dp, bottomStart = 28.dp),
+    color = Color.White
+  ) {
+    DetailsDrawerContent(
+      uiState = uiState,
+      windowSizeClass = windowSizeClass,
+      onBack = onBack,
+      onShare = onShare,
+      onRatingSelected = onRatingSelected,
+      onCommentChanged = onCommentChanged,
+      onSaveRating = onSaveRating,
+      onToggleFavorite = onToggleFavorite
+    )
+  }
+}
+
+@Composable
+private fun FullscreenDetailsContent(
+  uiState: DetailsUiState,
+  windowSizeClass: WindowSizeClass,
+  onBack: () -> Unit,
+  onShare: () -> Unit,
+  onRatingSelected: (Int) -> Unit,
+  onCommentChanged: (String) -> Unit,
+  onSaveRating: () -> Unit,
+  onToggleFavorite: () -> Unit
+) {
+  Surface(
+    modifier = Modifier
+      .fillMaxSize()
+      .background(Color.White),
     color = Color.White
   ) {
     DetailsDrawerContent(
