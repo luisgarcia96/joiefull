@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -50,7 +51,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.graphics.Color
@@ -81,7 +81,6 @@ fun DetailsScreen(
   onSaveRating: () -> Unit,
   onToggleFavorite: () -> Unit
 ) {
-  val configuration = LocalConfiguration.current
   val context = LocalContext.current
 
   if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
@@ -149,20 +148,19 @@ private fun DetailsDrawerContent(
   onToggleFavorite: () -> Unit
 ) {
   val scrollState = rememberScrollState()
-  val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
   Scaffold(
     topBar = {},
     containerColor = Color.White,
     contentColor = MaterialTheme.colorScheme.onSurface
   ) { innerPadding ->
-    Box(
+    BoxWithConstraints(
       modifier = Modifier
         .fillMaxSize()
         .padding(innerPadding)
     ) {
       val isWideContent =
-        screenWidth >= 760.dp && windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
+        maxWidth >= 760.dp && windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
       when {
         uiState.isLoading -> {
           Column(
