@@ -1,40 +1,74 @@
 package com.openclassrooms.joiefull.presentation.details
 
 import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.openclassrooms.joiefull.presentation.components.AppTopBar
 import com.openclassrooms.joiefull.presentation.components.RatingBar
 import java.text.NumberFormat
 import java.util.Locale
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
 
 @Composable
 fun DetailsScreen(
@@ -48,78 +82,148 @@ fun DetailsScreen(
   onToggleFavorite: () -> Unit
 ) {
   val context = LocalContext.current
-  val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
+  val drawerState = rememberDrawerState(initialValue = DrawerValue.Open)
 
-  Scaffold(
-    topBar = {
-      AppTopBar(
-        title = uiState.item?.name ?: "Détails",
-        onBack = onBack,
-        onShare = { onShare(context) },
-        onFavorite = { onToggleFavorite() },
-        isFavorite = uiState.item?.isFavorite == true
-      )
-    }
-  ) { innerPadding ->
-    when {
-      uiState.isLoading -> {
-        Column(
+  LaunchedEffect(drawerState) {
+    snapshotFlow { drawerState.currentValue }
+      .filter { it == DrawerValue.Closed }
+      .collectLatest { onBack() }
+  }
+
+  CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+    ModalNavigationDrawer(
+      drawerState = drawerState,
+      gesturesEnabled = true,
+      drawerContent = {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+          DetailsDrawerPanel(
+            uiState = uiState,
+            windowSizeClass = windowSizeClass,
+            onBack = onBack,
+            onShare = { onShare(context) },
+            onRatingSelected = onRatingSelected,
+            onCommentChanged = onCommentChanged,
+            onSaveRating = onSaveRating,
+            onToggleFavorite = onToggleFavorite
+          )
+        }
+      },
+      scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f)
+    ) {
+      CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Box(
           modifier = Modifier
             .fillMaxSize()
-            .padding(innerPadding),
-          verticalArrangement = Arrangement.Center,
-          horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-          CircularProgressIndicator()
-        }
+            .background(Color.White)
+        )
       }
+    }
+  }
+}
 
-      uiState.item != null -> {
-        if (isExpanded) {
-          Row(
-            modifier = Modifier
-              .fillMaxSize()
-              .padding(innerPadding)
-              .padding(24.dp),
-            horizontalArrangement = Arrangement.spacedBy(32.dp)
-          ) {
-            DetailsImage(
-              modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
-              imageUrl = uiState.item.imageUrl,
-              title = uiState.item.name
-            )
-            DetailsInfo(
-              uiState = uiState,
-              modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
-              onRatingSelected = onRatingSelected,
-              onCommentChanged = onCommentChanged,
-              onSaveRating = onSaveRating
-            )
-          }
-        } else {
+@Composable
+private fun DetailsDrawerContent(
+  uiState: DetailsUiState,
+  windowSizeClass: WindowSizeClass,
+  onBack: () -> Unit,
+  onShare: () -> Unit,
+  onRatingSelected: (Int) -> Unit,
+  onCommentChanged: (String) -> Unit,
+  onSaveRating: () -> Unit,
+  onToggleFavorite: () -> Unit
+) {
+  val scrollState = rememberScrollState()
+
+  Scaffold(
+    topBar = {},
+    containerColor = Color.White,
+    contentColor = MaterialTheme.colorScheme.onSurface
+  ) { innerPadding ->
+    BoxWithConstraints(
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(innerPadding)
+    ) {
+      val isWideContent =
+        maxWidth >= 760.dp && windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
+      when {
+        uiState.isLoading -> {
           Column(
-            modifier = Modifier
-              .fillMaxSize()
-              .padding(innerPadding)
-              .verticalScroll(rememberScrollState())
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
           ) {
-            DetailsImage(
+            CircularProgressIndicator()
+          }
+        }
+
+        uiState.item != null -> {
+          val contentPadding = 20.dp
+          if (isWideContent) {
+            Row(
               modifier = Modifier
-                .fillMaxWidth()
-                .height(320.dp),
-              imageUrl = uiState.item.imageUrl,
-              title = uiState.item.name
-            )
-            DetailsInfo(
-              uiState = uiState,
-              modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp),
-              onRatingSelected = onRatingSelected,
-              onCommentChanged = onCommentChanged,
-              onSaveRating = onSaveRating
+                .fillMaxSize()
+                .padding(horizontal = contentPadding, vertical = 24.dp),
+              horizontalArrangement = Arrangement.spacedBy(32.dp)
+            ) {
+              DetailsCard(
+                modifier = Modifier
+                  .weight(1f)
+                  .fillMaxHeight(),
+                imageUrl = uiState.item.imageUrl,
+                title = uiState.item.name,
+                likes = uiState.item.likes,
+                isFavorite = uiState.item.isFavorite,
+                onBack = onBack,
+                onShare = onShare,
+                onToggleFavorite = onToggleFavorite
+              )
+              DetailsInfo(
+                uiState = uiState,
+                modifier = Modifier
+                  .weight(1f)
+                  .verticalScroll(scrollState),
+                onRatingSelected = onRatingSelected,
+                onCommentChanged = onCommentChanged,
+                onSaveRating = onSaveRating
+              )
+            }
+          } else {
+            Column(
+              modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = contentPadding, vertical = 24.dp),
+              verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+              DetailsCard(
+                modifier = Modifier.fillMaxWidth(),
+                imageUrl = uiState.item.imageUrl,
+                title = uiState.item.name,
+                likes = uiState.item.likes,
+                isFavorite = uiState.item.isFavorite,
+                onBack = onBack,
+                onShare = onShare,
+                onToggleFavorite = onToggleFavorite
+              )
+              DetailsInfo(
+                uiState = uiState,
+                modifier = Modifier.fillMaxWidth(),
+                onRatingSelected = onRatingSelected,
+                onCommentChanged = onCommentChanged,
+                onSaveRating = onSaveRating
+              )
+            }
+          }
+        }
+        else -> {
+          Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+          ) {
+            Text(
+              text = "Article introuvable",
+              style = MaterialTheme.typography.bodyLarge
             )
           }
         }
@@ -129,20 +233,81 @@ fun DetailsScreen(
 }
 
 @Composable
-private fun DetailsImage(
+private fun DetailsCard(
   modifier: Modifier,
   imageUrl: String,
-  title: String
+  title: String,
+  likes: Int,
+  isFavorite: Boolean,
+  onBack: () -> Unit,
+  onShare: () -> Unit,
+  onToggleFavorite: () -> Unit
 ) {
-  AsyncImage(
-    model = ImageRequest.Builder(LocalContext.current)
-      .data(imageUrl)
-      .crossfade(true)
-      .build(),
-    contentDescription = "Visuel de $title",
+  Card(
     modifier = modifier,
-    contentScale = ContentScale.Crop
-  )
+    shape = RoundedCornerShape(24.dp),
+    elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
+  ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+      AsyncImage(
+        model = ImageRequest.Builder(LocalContext.current)
+          .data(imageUrl)
+          .crossfade(true)
+          .build(),
+        contentDescription = "Visuel de $title",
+        modifier = Modifier
+          .fillMaxSize()
+          .aspectRatio(0.9f),
+        contentScale = ContentScale.Crop
+      )
+
+      Row(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(12.dp)
+          .align(Alignment.TopCenter),
+        horizontalArrangement = Arrangement.SpaceBetween
+      ) {
+        IconPill(
+          onClick = onBack,
+          icon = Icons.Outlined.ArrowBack,
+          contentDescription = "Revenir à la liste"
+        )
+        IconPill(
+          onClick = onShare,
+          icon = Icons.Outlined.Share,
+          contentDescription = "Partager ${title}"
+        )
+      }
+
+      Surface(
+        onClick = onToggleFavorite,
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 8.dp,
+        tonalElevation = 1.dp,
+        modifier = Modifier
+          .align(Alignment.BottomEnd)
+          .padding(12.dp)
+      ) {
+        Row(
+          modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+          Icon(
+            imageVector = if (isFavorite) Icons.Outlined.Favorite else Icons.Outlined.FavoriteBorder,
+            contentDescription = if (isFavorite) "Retirer des favoris" else "Ajouter aux favoris",
+            tint = MaterialTheme.colorScheme.primary
+          )
+          Text(
+            text = likes.toString(),
+            style = MaterialTheme.typography.titleMedium
+          )
+        }
+      }
+    }
+  }
 }
 
 @Composable
@@ -156,51 +321,136 @@ private fun DetailsInfo(
   val item = uiState.item ?: return
   Column(
     modifier = modifier,
-    verticalArrangement = Arrangement.spacedBy(16.dp)
+    verticalArrangement = Arrangement.spacedBy(18.dp)
   ) {
-    Text(
-      text = item.name,
-      style = MaterialTheme.typography.headlineMedium,
-      modifier = Modifier.semantics { heading() }
-    )
     Row(
-      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.spacedBy(12.dp),
       verticalAlignment = Alignment.CenterVertically
     ) {
       Text(
+        text = item.name,
+        style = MaterialTheme.typography.headlineMedium,
+        modifier = Modifier
+          .weight(1f)
+          .semantics { heading() }
+      )
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+      ) {
+        Icon(
+          imageVector = Icons.Rounded.Star,
+          contentDescription = "Note moyenne",
+          tint = MaterialTheme.colorScheme.primary,
+          modifier = Modifier.size(18.dp)
+        )
+        Text(
+          text = String.format(Locale.FRANCE, "%.1f", item.rating.value),
+          style = MaterialTheme.typography.titleMedium
+        )
+      }
+    }
+
+    Row(
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+      Text(
         text = item.price.toCurrency(),
-        style = MaterialTheme.typography.titleMedium
+        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
       )
       Text(
         text = item.originalPrice.toCurrency(),
-        style = MaterialTheme.typography.bodyMedium.copy(textDecoration = TextDecoration.LineThrough),
+        style = MaterialTheme.typography.bodyMedium.copy(
+          color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+          textDecoration = TextDecoration.LineThrough
+        ),
         modifier = Modifier.semantics {
           contentDescription = "Prix initial ${item.originalPrice} euros"
         }
       )
     }
-    RatingBar(
-      rating = uiState.userRating,
-      onRatingSelected = onRatingSelected
-    )
+
     Text(
       text = item.description,
       style = MaterialTheme.typography.bodyLarge
     )
-    OutlinedTextField(
-      value = uiState.comment,
-      onValueChange = onCommentChanged,
-      label = { Text("Commentaire") },
-      modifier = Modifier.fillMaxWidth(),
-      minLines = 3
-    )
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+      ) {
+        Surface(
+          shape = CircleShape,
+          color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+        ) {
+          Box(
+            modifier = Modifier
+              .size(42.dp)
+              .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.06f), shape = CircleShape),
+            contentAlignment = Alignment.Center
+          ) {
+            Icon(
+              imageVector = Icons.Outlined.Person,
+              contentDescription = null,
+              tint = MaterialTheme.colorScheme.primary
+            )
+          }
+        }
+        RatingBar(
+          rating = uiState.userRating,
+          onRatingSelected = onRatingSelected
+        )
+      }
+
+      OutlinedTextField(
+        value = uiState.comment,
+        onValueChange = onCommentChanged,
+        placeholder = { Text("Partagez ici vos impressions sur cette pièce") },
+        modifier = Modifier.fillMaxWidth(),
+        minLines = 3,
+        shape = RoundedCornerShape(16.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+          focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+          unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+        )
+      )
+    }
+
     Button(
       onClick = onSaveRating,
       modifier = Modifier
         .fillMaxWidth()
-        .semantics { contentDescription = "Enregistrer mon avis" }
+        .height(54.dp)
+        .semantics { contentDescription = "Enregistrer mon avis" },
+      shape = RoundedCornerShape(18.dp),
+      colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
     ) {
-      Text(text = "Publier mon avis")
+      Text(text = "Publier mon avis", style = MaterialTheme.typography.titleMedium)
+    }
+  }
+}
+
+@Composable
+private fun IconPill(
+  onClick: () -> Unit,
+  icon: androidx.compose.ui.graphics.vector.ImageVector,
+  contentDescription: String
+) {
+  Surface(
+    shape = CircleShape,
+    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+    shadowElevation = 6.dp,
+    tonalElevation = 1.dp
+  ) {
+    IconButton(onClick = onClick, modifier = Modifier.size(44.dp)) {
+      Icon(
+        imageVector = icon,
+        contentDescription = contentDescription,
+        tint = MaterialTheme.colorScheme.onSurface
+      )
     }
   }
 }
@@ -208,4 +458,47 @@ private fun DetailsInfo(
 private fun Double.toCurrency(): String {
   val formatter = NumberFormat.getCurrencyInstance(Locale.FRANCE)
   return formatter.format(this)
+}
+
+@Composable
+fun DetailsDrawerPanel(
+  uiState: DetailsUiState,
+  windowSizeClass: WindowSizeClass,
+  onBack: () -> Unit,
+  onShare: () -> Unit,
+  onRatingSelected: (Int) -> Unit,
+  onCommentChanged: (String) -> Unit,
+  onSaveRating: () -> Unit,
+  onToggleFavorite: () -> Unit,
+  modifier: Modifier = Modifier
+) {
+  Surface(
+    modifier = modifier
+      .fillMaxHeight()
+      .widthIn(min = 0.dp, max = preferredDrawerWidth(windowSizeClass))
+      .semantics { contentDescription = "Fiche produit détaillée" },
+    tonalElevation = 0.dp,
+    shadowElevation = 0.dp,
+    shape = RoundedCornerShape(topStart = 28.dp, bottomStart = 28.dp),
+    color = Color.White
+  ) {
+    DetailsDrawerContent(
+      uiState = uiState,
+      windowSizeClass = windowSizeClass,
+      onBack = onBack,
+      onShare = onShare,
+      onRatingSelected = onRatingSelected,
+      onCommentChanged = onCommentChanged,
+      onSaveRating = onSaveRating,
+      onToggleFavorite = onToggleFavorite
+    )
+  }
+}
+
+private fun preferredDrawerWidth(windowSizeClass: WindowSizeClass): Dp {
+  return when (windowSizeClass.widthSizeClass) {
+    WindowWidthSizeClass.Expanded -> 520.dp
+    WindowWidthSizeClass.Medium -> 460.dp
+    else -> 400.dp
+  }
 }

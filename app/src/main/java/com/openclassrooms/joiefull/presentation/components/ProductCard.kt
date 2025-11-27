@@ -32,6 +32,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import coil.compose.AsyncImage
@@ -53,7 +54,7 @@ fun ProductCard(
     modifier = modifier
       .fillMaxWidth()
       .semantics { contentDescription = "Ouvrir la fiche ${item.name}" },
-    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    colors = CardDefaults.cardColors(containerColor = Color.White),
     onClick = { onClick(item) }
   ) {
     Column(modifier = Modifier.padding(12.dp)) {
@@ -75,7 +76,7 @@ fun ProductCard(
         Surface(
           onClick = { onToggleFavorite(item) },
           shape = RoundedCornerShape(24.dp),
-          color = MaterialTheme.colorScheme.surface,
+          color = Color.White,
           shadowElevation = 4.dp,
           tonalElevation = 0.dp,
           modifier = Modifier
@@ -109,7 +110,8 @@ fun ProductCard(
         Text(
           text = item.name,
           style = textStyles.productTitle,
-          maxLines = 2,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
           modifier = Modifier.weight(1f)
         )
         Spacer(modifier = Modifier.width(8.dp))
