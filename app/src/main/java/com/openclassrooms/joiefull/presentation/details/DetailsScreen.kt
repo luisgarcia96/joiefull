@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -51,6 +50,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.graphics.Color
@@ -148,19 +148,20 @@ private fun DetailsDrawerContent(
   onToggleFavorite: () -> Unit
 ) {
   val scrollState = rememberScrollState()
+  val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
   Scaffold(
     topBar = {},
     containerColor = Color.White,
     contentColor = MaterialTheme.colorScheme.onSurface
   ) { innerPadding ->
-    BoxWithConstraints(
+    Box(
       modifier = Modifier
         .fillMaxSize()
         .padding(innerPadding)
     ) {
       val isWideContent =
-        maxWidth >= 760.dp && windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
+        screenWidth >= 760.dp && windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
       when {
         uiState.isLoading -> {
           Column(
@@ -364,6 +365,14 @@ private fun DetailsInfo(
           text = String.format(Locale.FRANCE, "%.1f", item.rating.value),
           style = MaterialTheme.typography.titleMedium
         )
+        if (item.rating.count > 0) {
+          Text(
+            text = "(${item.rating.count})",
+            style = MaterialTheme.typography.bodyMedium.copy(
+              color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+          )
+        }
       }
     }
 
@@ -391,6 +400,24 @@ private fun DetailsInfo(
       text = item.description,
       style = MaterialTheme.typography.bodyLarge
     )
+
+    Row(
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+      Icon(
+        imageVector = Icons.Outlined.Share,
+        contentDescription = "Nombre de partages",
+        tint = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.size(18.dp)
+      )
+      Text(
+        text = "${item.shareCount} partage${if (item.shareCount == 1) "" else "s"}",
+        style = MaterialTheme.typography.bodyMedium.copy(
+          color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+        )
+      )
+    }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
       Row(

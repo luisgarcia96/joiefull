@@ -129,7 +129,7 @@ private val clothingItemsMock = listOf(
     price = 159.0,
     originalPrice = 189.0,
     imageUrl = "https://picsum.photos/400?random=5",
-    category = Category.BAGS,
+    category = Category.ACCESSORIES,
     rating = RatingDto(value = 4.9f, count = 210),
     likes = 201
   ),
@@ -140,7 +140,7 @@ private val clothingItemsMock = listOf(
     price = 129.0,
     originalPrice = 149.0,
     imageUrl = "https://picsum.photos/400?random=6",
-    category = Category.BAGS,
+    category = Category.ACCESSORIES,
     rating = RatingDto(value = 4.4f, count = 74),
     likes = 88
   ),
@@ -151,7 +151,7 @@ private val clothingItemsMock = listOf(
     price = 99.0,
     originalPrice = 119.0,
     imageUrl = "https://picsum.photos/400?random=13",
-    category = Category.BAGS,
+    category = Category.ACCESSORIES,
     rating = RatingDto(value = 4.6f, count = 132),
     likes = 157
   ),
@@ -162,7 +162,7 @@ private val clothingItemsMock = listOf(
     price = 189.0,
     originalPrice = 219.0,
     imageUrl = "https://picsum.photos/400?random=14",
-    category = Category.BAGS,
+    category = Category.ACCESSORIES,
     rating = RatingDto(value = 4.3f, count = 51),
     likes = 69
   ),
@@ -173,7 +173,7 @@ private val clothingItemsMock = listOf(
     price = 59.0,
     originalPrice = 69.0,
     imageUrl = "https://picsum.photos/400?random=15",
-    category = Category.BAGS,
+    category = Category.ACCESSORIES,
     rating = RatingDto(value = 4.2f, count = 88),
     likes = 94
   )

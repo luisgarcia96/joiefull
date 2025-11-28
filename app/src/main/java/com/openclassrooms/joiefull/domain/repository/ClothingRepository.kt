@@ -8,4 +8,5 @@ interface ClothingRepository {
   suspend fun getClothingDetails(id: String): ClothingItem?
   suspend fun saveRating(id: String, rating: Float, comment: String)
   suspend fun toggleFavorite(id: String): ClothingItem?
+  suspend fun registerShare(id: String): ClothingItem?
 }

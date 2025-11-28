@@ -10,6 +10,7 @@ data class ClothingItemDto(
   val originalPrice: Double,
   val imageUrl: String,
   val category: Category,
-  val rating: RatingDto,
-  val likes: Int
+  val rating: RatingDto = RatingDto(value = 0f, count = 0),
+  val likes: Int,
+  val shares: Int = 0
 )

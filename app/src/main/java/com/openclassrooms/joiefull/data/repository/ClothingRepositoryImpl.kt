@@ -54,6 +54,12 @@ class ClothingRepositoryImpl(
     return clothingFlow.value.firstOrNull { it.id == id }
   }
 
+  override suspend fun registerShare(id: String): ClothingItem? {
+    localDataSource.incrementShare(id)
+    rebuildFlow()
+    return clothingFlow.value.firstOrNull { it.id == id }
+  }
+
   private suspend fun refreshFromRemote() {
     cachedRemote = remoteDataSource.fetchClothingItems()
     rebuildFlow()
@@ -67,7 +73,18 @@ class ClothingRepositoryImpl(
 
 private fun ClothingItemDto.toDomain(localDataSource: ClothingLocalDataSource): ClothingItem {
   val savedRating = localDataSource.getRating(id)
-  val comment = localDataSource.getComment(id)
+  val savedVoteCount = localDataSource.getRatingVoteCount(id)
+  val totalVotes = rating.count + savedVoteCount
+  val aggregatedRating = if (totalVotes > 0) {
+    val baseTotal = rating.value * rating.count
+    val localTotal = savedRating?.rating ?: 0f
+    (baseTotal + localTotal) / totalVotes
+  } else {
+    0f
+  }
+  val totalShares = shares + localDataSource.getShareCount(id)
+  val isFavorite = localDataSource.isFavorite(id)
+  val likesWithFavorite = likes + if (isFavorite) 1 else 0
   return ClothingItem(
     id = id,
     name = name,
@@ -76,11 +93,11 @@ private fun ClothingItemDto.toDomain(localDataSource: ClothingLocalDataSource): 
     originalPrice = originalPrice,
     imageUrl = imageUrl,
     category = category,
-    rating = savedRating?.let {
-      Rating(value = it.rating, count = rating.count + 1)
-    } ?: Rating(value = rating.value, count = rating.count),
-    likes = likes,
-    isFavorite = localDataSource.isFavorite(id),
-    userComment = comment
+    rating = Rating(value = aggregatedRating, count = totalVotes),
+    userRating = savedRating?.rating,
+    likes = likesWithFavorite,
+    shareCount = totalShares,
+    isFavorite = isFavorite,
+    userComment = savedRating?.comment
   )
 }

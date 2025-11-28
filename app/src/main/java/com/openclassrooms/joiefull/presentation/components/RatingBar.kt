@@ -37,6 +37,12 @@ fun RatingBar(
         rating in (starNumber - 1f + 0.25f)..<starNumber.toFloat() -> Icons.Rounded.StarHalf
         else -> Icons.Outlined.Star
       }
+      val isSelected = rating >= starNumber || icon == Icons.Rounded.StarHalf
+      val tint = if (isSelected) {
+        MaterialTheme.colorScheme.primary
+      } else {
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+      }
       if (onRatingSelected != null) {
         IconButton(
           onClick = { onRatingSelected.invoke(starNumber) },
@@ -45,7 +51,7 @@ fun RatingBar(
           Icon(
             imageVector = icon,
             contentDescription = "Sélectionner $starNumber étoile(s)",
-            tint = MaterialTheme.colorScheme.primary
+            tint = tint
           )
         }
       } else {
@@ -53,7 +59,7 @@ fun RatingBar(
           imageVector = icon,
           contentDescription = null,
           modifier = Modifier.size(starSize),
-          tint = MaterialTheme.colorScheme.primary
+          tint = tint
         )
       }
     }

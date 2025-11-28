@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.openclassrooms.joiefull.di.AppContainer
 import com.openclassrooms.joiefull.domain.model.ClothingItem
 import com.openclassrooms.joiefull.domain.usecase.GetClothingDetailsUseCase
+import com.openclassrooms.joiefull.domain.usecase.RegisterShareUseCase
 import com.openclassrooms.joiefull.domain.usecase.SaveRatingUseCase
 import com.openclassrooms.joiefull.domain.usecase.ToggleFavoriteUseCase
 import java.text.NumberFormat
@@ -31,6 +32,7 @@ class DetailsViewModel(
   private val itemId: String,
   private val getClothingDetailsUseCase: GetClothingDetailsUseCase,
   private val saveRatingUseCase: SaveRatingUseCase,
+  private val registerShareUseCase: RegisterShareUseCase,
   private val toggleFavoriteUseCase: ToggleFavoriteUseCase
 ) : ViewModel() {
 
@@ -48,7 +50,7 @@ class DetailsViewModel(
         it.copy(
           isLoading = false,
           item = item,
-          userRating = item?.rating?.value ?: 0f,
+          userRating = item?.userRating ?: 0f,
           comment = item?.userComment.orEmpty()
         )
       }
@@ -81,13 +83,13 @@ class DetailsViewModel(
 
   fun shareItem(context: Context) {
     val item = _uiState.value.item ?: return
-    val shareText = "${item.name} - ${item.price.toCurrencyText()}\n${item.description}"
-    val sendIntent = Intent(Intent.ACTION_SEND).apply {
-      type = "text/plain"
-      putExtra(Intent.EXTRA_TEXT, shareText)
+    viewModelScope.launch {
+      val updated = registerShareUseCase(itemId)
+      if (updated != null) {
+        _uiState.update { it.copy(item = updated) }
+      }
+      launchShareIntent(context, updated ?: item)
     }
-    val chooser = Intent.createChooser(sendIntent, "Partager \"${item.name}\"")
-    ContextCompat.startActivity(context, chooser, null)
   }
 
   companion object {
@@ -101,6 +103,7 @@ class DetailsViewModel(
           itemId = itemId,
           getClothingDetailsUseCase = appContainer.getClothingDetailsUseCase,
           saveRatingUseCase = appContainer.saveRatingUseCase,
+          registerShareUseCase = appContainer.registerShareUseCase,
           toggleFavoriteUseCase = appContainer.toggleFavoriteUseCase
         ) as T
       }
@@ -111,4 +114,14 @@ class DetailsViewModel(
 private fun Double.toCurrencyText(): String {
   val formatter = NumberFormat.getCurrencyInstance(Locale.FRANCE)
   return formatter.format(this)
+}
+
+private fun launchShareIntent(context: Context, item: ClothingItem) {
+  val shareText = "${item.name} - ${item.price.toCurrencyText()}\n${item.description}"
+  val sendIntent = Intent(Intent.ACTION_SEND).apply {
+    type = "text/plain"
+    putExtra(Intent.EXTRA_TEXT, shareText)
+  }
+  val chooser = Intent.createChooser(sendIntent, "Partager \"${item.name}\"")
+  ContextCompat.startActivity(context, chooser, null)
 }
