@@ -55,6 +55,7 @@ dependencies {
   implementation(libs.androidx.compose.material3.window.size.class1)
   implementation("androidx.compose.ui:ui-text-google-fonts")
   testImplementation(libs.junit)
+  testImplementation(libs.kotlinx.coroutines.test)
   androidTestImplementation(libs.androidx.junit)
   androidTestImplementation(libs.androidx.espresso.core)
   androidTestImplementation(platform(libs.androidx.compose.bom))
