@@ -12,10 +12,7 @@ Spécifiez ici le nom du design pattern que vous avez utilisé pour créer l’a
 ### Diagramme d’architecture de l’application
 Collez ici un diagramme réalisé par vos soins pour expliquer les différentes couches de votre application et comment elles interagissent entre elles pour gérer les données et l’interface utilisateur.
 
----
-
-## Stack technique
-
+### Stack technique
 Détaillez ici sous forme de liste les librairies externes utilisées qui vous ont aidé à réaliser l’application.
 
 Exemples :
@@ -23,10 +20,7 @@ Exemples :
 - Coroutines pour la gestion des tâches asynchrones  
 - Retrofit pour les appels à l’API  
 
----
-
-## API
-
+### API
 Détaillez ici votre implémentation pour la gestion des appels réseau que fait l’application pour récupérer les données de l’API.
 
 ---
@@ -35,20 +29,16 @@ Détaillez ici votre implémentation pour la gestion des appels réseau que fait
 
 Expliquez les stratégies mises en place pour réaliser le mode tablette, et mettez en avant les parties d’écrans que vous avez réussi à réutiliser pour les deux types d’appareils.
 
----
-
-## Maquettes de l’application
+### Maquettes de l’application
 
 Vous pouvez insérer ici les maquettes fournies par votre designer pour ensuite comparer les vôtres dans les prochaines sections avec le travail demandé.
 
----
+### Captures d’écran
 
-## Captures d’écran
-
-### Téléphone 6”
+#### Téléphone 6”
 Insérez ici des captures de l’application sur téléphone.
 
-### Tablette 10”
+#### Tablette 10”
 Insérez ici des captures de l’application sur tablette.
 
 ---
