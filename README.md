@@ -14,7 +14,35 @@ Un petit service locator (`AppContainer`) instancie les dépendances afin de gar
 Clean Architecture avec un pattern MVVM pour la couche présentation (ViewModel + UI Compose).
 
 ### Diagramme d’architecture de l’application
-Collez ici un diagramme réalisé par vos soins pour expliquer les différentes couches de votre application et comment elles interagissent entre elles pour gérer les données et l’interface utilisateur.
+```mermaid
+flowchart LR
+  subgraph Presentation
+    UI[HomeScreen / DetailsScreen]
+    VMs[HomeViewModel / DetailsViewModel]
+  end
+
+  subgraph Domain
+    UCs[Use cases\nGetClothes / GetDetails / SaveRating / ToggleFavorite / RegisterShare]
+    RepoPort[(ClothingRepository\ninterface)]
+  end
+
+  subgraph Data
+    Repo[ClothingRepositoryImpl]
+    RemoteDS[ClothingRemoteDataSource]
+    LocalDS[ClothingLocalDataSource]
+  end
+
+  subgraph Remote
+    HttpSvc[HttpClothingService]
+    API[Endpoint JSON GitHub]
+  end
+
+  UI --> VMs --> UCs --> RepoPort
+  RepoPort --> Repo
+  Repo --> RemoteDS --> HttpSvc --> API
+  Repo --> LocalDS
+```
+`AppContainer` instancie ces briques et fournit les dépendances aux ViewModels.
 
 ### Stack technique
 - Kotlin + Coroutines / Flow pour le langage et l’asynchronisme.  
