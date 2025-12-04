@@ -1,3 +1,29 @@
 <resources>
     <string name="app_name">Joiefull</string>
+    <string name="open_product">Ouvrir la fiche %1$s</string>
+    <string name="product_image_description">Photo de %1$s</string>
+    <string name="add_to_favorites">Ajouter aux favoris</string>
+    <string name="remove_from_favorites">Retirer des favoris</string>
+    <string name="favorite_state_in">Dans les favoris</string>
+    <string name="favorite_state_out">Non dans les favoris</string>
+    <string name="product_rating">Note de %1$s</string>
+    <string name="rating_value">Note actuelle %1$.1f sur 5</string>
+    <string name="rating_select_star">Sélectionner %1$d étoile(s)</string>
+    <string name="rating_increase">Augmenter la note</string>
+    <string name="rating_decrease">Diminuer la note</string>
+    <string name="share_product">Partager %1$s</string>
+    <string name="back_to_list">Revenir à la liste</string>
+    <plurals name="share_count">
+        <item quantity="one">%d partage</item>
+        <item quantity="other">%d partages</item>
+    </plurals>
+    <string name="share_count_label">Nombre de partages</string>
+    <string name="comment_placeholder">Partagez ici vos impressions sur cette pièce</string>
+    <string name="comment_label">Votre avis</string>
+    <string name="publish_review">Publier mon avis</string>
+    <string name="save_review_content_description">Enregistrer mon avis</string>
+    <string name="initial_price_content_description">Prix initial %1$s euros</string>
+    <string name="details_panel_description">Fiche produit détaillée</string>
+    <string name="rating_average">Note moyenne</string>
+    <string name="item_not_found">Article introuvable</string>
 </resources>

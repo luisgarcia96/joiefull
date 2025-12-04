@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,6 +31,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.openclassrooms.joiefull.R
 import com.openclassrooms.joiefull.domain.model.ClothingItem
 import com.openclassrooms.joiefull.presentation.home.HomeTextStyles
 import java.text.NumberFormat
@@ -50,10 +56,23 @@ fun ProductCard(
   onClick: (ClothingItem) -> Unit,
   onToggleFavorite: (ClothingItem) -> Unit
 ) {
+  val openProductDescription = stringResource(id = R.string.open_product, item.name)
+  val productImageDescription = stringResource(id = R.string.product_image_description, item.name)
+  val favoriteActionDescription = if (item.isFavorite) {
+    stringResource(id = R.string.remove_from_favorites)
+  } else {
+    stringResource(id = R.string.add_to_favorites)
+  }
+  val favoriteStateDescription = if (item.isFavorite) {
+    stringResource(id = R.string.favorite_state_in)
+  } else {
+    stringResource(id = R.string.favorite_state_out)
+  }
+
   Card(
     modifier = modifier
       .fillMaxWidth()
-      .semantics { contentDescription = "Ouvrir la fiche ${item.name}" },
+      .semantics { contentDescription = openProductDescription },
     colors = CardDefaults.cardColors(containerColor = Color.White),
     onClick = { onClick(item) }
   ) {
@@ -69,7 +88,7 @@ fun ProductCard(
             .data(item.imageUrl)
             .crossfade(true)
             .build(),
-          contentDescription = "Photo de ${item.name}",
+          contentDescription = productImageDescription,
           modifier = Modifier.matchParentSize(),
           contentScale = ContentScale.Crop
         )
@@ -82,6 +101,12 @@ fun ProductCard(
           modifier = Modifier
             .align(Alignment.BottomEnd)
             .padding(8.dp)
+            .minimumInteractiveComponentSize()
+            .semantics {
+              role = Role.Button
+              contentDescription = favoriteActionDescription
+              stateDescription = favoriteStateDescription
+            }
         ) {
           Row(
             modifier = Modifier
@@ -91,7 +116,7 @@ fun ProductCard(
           ) {
             Icon(
               imageVector = if (item.isFavorite) Icons.Outlined.Favorite else Icons.Outlined.FavoriteBorder,
-              contentDescription = if (item.isFavorite) "Retirer des favoris" else "Ajouter aux favoris",
+              contentDescription = null,
               tint = MaterialTheme.colorScheme.primary,
               modifier = Modifier.size(18.dp)
             )
@@ -154,7 +179,7 @@ private fun RatingRow(
   ) {
     Icon(
       imageVector = Icons.Rounded.Star,
-      contentDescription = "Note de ${item.name}",
+      contentDescription = stringResource(id = R.string.product_rating, item.name),
       tint = Color(0xFFFFA726),
       modifier = Modifier.size(20.dp)
     )

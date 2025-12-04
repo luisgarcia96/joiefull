@@ -41,6 +41,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -57,11 +58,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.openclassrooms.joiefull.presentation.components.RatingBar
@@ -69,6 +77,7 @@ import java.text.NumberFormat
 import java.util.Locale
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
+import com.openclassrooms.joiefull.R
 
 @Composable
 fun DetailsScreen(
@@ -161,7 +170,7 @@ private fun DetailsDrawerContent(
         .padding(innerPadding)
     ) {
       val isWideContent =
-        screenWidth >= 760.dp && windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
+        screenWidth >= 1024.dp && windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
       when {
         uiState.isLoading -> {
           Column(
@@ -175,61 +184,30 @@ private fun DetailsDrawerContent(
 
         uiState.item != null -> {
           val contentPadding = 20.dp
-          if (isWideContent) {
-            Row(
-              modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = contentPadding, vertical = 24.dp),
-              horizontalArrangement = Arrangement.spacedBy(32.dp)
-            ) {
-              DetailsCard(
-                modifier = Modifier
-                  .weight(1f)
-                  .fillMaxHeight(),
-                imageUrl = uiState.item.imageUrl,
-                title = uiState.item.name,
-                likes = uiState.item.likes,
-                isFavorite = uiState.item.isFavorite,
-                onBack = onBack,
-                onShare = onShare,
-                onToggleFavorite = onToggleFavorite
-              )
-              DetailsInfo(
-                uiState = uiState,
-                modifier = Modifier
-                  .weight(1f)
-                  .verticalScroll(scrollState),
-                onRatingSelected = onRatingSelected,
-                onCommentChanged = onCommentChanged,
-                onSaveRating = onSaveRating
-              )
-            }
-          } else {
-            Column(
-              modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = contentPadding, vertical = 24.dp),
-              verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-              DetailsCard(
-                modifier = Modifier.fillMaxWidth(),
-                imageUrl = uiState.item.imageUrl,
-                title = uiState.item.name,
-                likes = uiState.item.likes,
-                isFavorite = uiState.item.isFavorite,
-                onBack = onBack,
-                onShare = onShare,
-                onToggleFavorite = onToggleFavorite
-              )
-              DetailsInfo(
-                uiState = uiState,
-                modifier = Modifier.fillMaxWidth(),
-                onRatingSelected = onRatingSelected,
-                onCommentChanged = onCommentChanged,
-                onSaveRating = onSaveRating
-              )
-            }
+          Column(
+            modifier = Modifier
+              .fillMaxSize()
+              .verticalScroll(scrollState)
+              .padding(horizontal = contentPadding, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+          ) {
+            DetailsCard(
+              modifier = Modifier.fillMaxWidth(),
+              imageUrl = uiState.item.imageUrl,
+              title = uiState.item.name,
+              likes = uiState.item.likes,
+              isFavorite = uiState.item.isFavorite,
+              onBack = onBack,
+              onShare = onShare,
+              onToggleFavorite = onToggleFavorite
+            )
+            DetailsInfo(
+              uiState = uiState,
+              modifier = Modifier.fillMaxWidth(),
+              onRatingSelected = onRatingSelected,
+              onCommentChanged = onCommentChanged,
+              onSaveRating = onSaveRating
+            )
           }
         }
         else -> {
@@ -238,7 +216,7 @@ private fun DetailsDrawerContent(
             contentAlignment = Alignment.Center
           ) {
             Text(
-              text = "Article introuvable",
+              text = stringResource(id = R.string.item_not_found),
               style = MaterialTheme.typography.bodyLarge
             )
           }
@@ -259,6 +237,16 @@ private fun DetailsCard(
   onShare: () -> Unit,
   onToggleFavorite: () -> Unit
 ) {
+  val favoriteActionDescription = if (isFavorite) {
+    stringResource(id = R.string.remove_from_favorites)
+  } else {
+    stringResource(id = R.string.add_to_favorites)
+  }
+  val favoriteStateDescription = if (isFavorite) {
+    stringResource(id = R.string.favorite_state_in)
+  } else {
+    stringResource(id = R.string.favorite_state_out)
+  }
   Card(
     modifier = modifier,
     shape = RoundedCornerShape(24.dp),
@@ -270,7 +258,7 @@ private fun DetailsCard(
           .data(imageUrl)
           .crossfade(true)
           .build(),
-        contentDescription = "Visuel de $title",
+        contentDescription = stringResource(id = R.string.product_image_description, title),
         modifier = Modifier
           .fillMaxSize()
           .aspectRatio(0.9f),
@@ -287,12 +275,12 @@ private fun DetailsCard(
         IconPill(
           onClick = onBack,
           icon = Icons.AutoMirrored.Outlined.ArrowBack,
-          contentDescription = "Revenir à la liste"
+          contentDescription = stringResource(id = R.string.back_to_list)
         )
         IconPill(
           onClick = onShare,
           icon = Icons.Outlined.Share,
-          contentDescription = "Partager ${title}"
+          contentDescription = stringResource(id = R.string.share_product, title)
         )
       }
 
@@ -305,6 +293,12 @@ private fun DetailsCard(
         modifier = Modifier
           .align(Alignment.BottomEnd)
           .padding(12.dp)
+          .minimumInteractiveComponentSize()
+          .semantics {
+            role = Role.Button
+            contentDescription = favoriteActionDescription
+            stateDescription = favoriteStateDescription
+          }
       ) {
         Row(
           modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
@@ -313,7 +307,7 @@ private fun DetailsCard(
         ) {
           Icon(
             imageVector = if (isFavorite) Icons.Outlined.Favorite else Icons.Outlined.FavoriteBorder,
-            contentDescription = if (isFavorite) "Retirer des favoris" else "Ajouter aux favoris",
+            contentDescription = null,
             tint = MaterialTheme.colorScheme.primary
           )
           Text(
@@ -335,6 +329,11 @@ private fun DetailsInfo(
   onSaveRating: () -> Unit
 ) {
   val item = uiState.item ?: return
+  val initialPriceContentDescription = stringResource(
+    id = R.string.initial_price_content_description,
+    item.originalPrice.toCurrency()
+  )
+  val saveReviewContentDescription = stringResource(id = R.string.save_review_content_description)
   Column(
     modifier = modifier,
     verticalArrangement = Arrangement.spacedBy(18.dp)
@@ -357,7 +356,7 @@ private fun DetailsInfo(
       ) {
         Icon(
           imageVector = Icons.Rounded.Star,
-          contentDescription = "Note moyenne",
+          contentDescription = stringResource(id = R.string.rating_average),
           tint = MaterialTheme.colorScheme.primary,
           modifier = Modifier.size(18.dp)
         )
@@ -391,7 +390,7 @@ private fun DetailsInfo(
           textDecoration = TextDecoration.LineThrough
         ),
         modifier = Modifier.semantics {
-          contentDescription = "Prix initial ${item.originalPrice} euros"
+          contentDescription = initialPriceContentDescription
         }
       )
     }
@@ -407,12 +406,16 @@ private fun DetailsInfo(
     ) {
       Icon(
         imageVector = Icons.Outlined.Share,
-        contentDescription = "Nombre de partages",
+        contentDescription = stringResource(id = R.string.share_count_label),
         tint = MaterialTheme.colorScheme.primary,
         modifier = Modifier.size(18.dp)
       )
       Text(
-        text = "${item.shareCount} partage${if (item.shareCount == 1) "" else "s"}",
+        text = pluralStringResource(
+          id = R.plurals.share_count,
+          count = item.shareCount,
+          item.shareCount
+        ),
         style = MaterialTheme.typography.bodyMedium.copy(
           color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
         )
@@ -441,23 +444,25 @@ private fun DetailsInfo(
             )
           }
         }
-        RatingBar(
-          rating = uiState.userRating,
-          onRatingSelected = onRatingSelected
-        )
-      }
+      RatingBar(
+        rating = uiState.userRating,
+        onRatingSelected = onRatingSelected
+      )
+    }
 
       OutlinedTextField(
         value = uiState.comment,
         onValueChange = onCommentChanged,
-        placeholder = { Text("Partagez ici vos impressions sur cette pièce") },
+        label = { Text(text = stringResource(id = R.string.comment_label)) },
+        placeholder = { Text(text = stringResource(id = R.string.comment_placeholder)) },
         modifier = Modifier.fillMaxWidth(),
         minLines = 3,
         shape = RoundedCornerShape(16.dp),
         colors = OutlinedTextFieldDefaults.colors(
           focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
           unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-        )
+        ),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
       )
     }
 
@@ -466,11 +471,14 @@ private fun DetailsInfo(
       modifier = Modifier
         .fillMaxWidth()
         .height(54.dp)
-        .semantics { contentDescription = "Enregistrer mon avis" },
+        .semantics { contentDescription = saveReviewContentDescription },
       shape = RoundedCornerShape(18.dp),
       colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
     ) {
-      Text(text = "Publier mon avis", style = MaterialTheme.typography.titleMedium)
+      Text(
+        text = stringResource(id = R.string.publish_review),
+        style = MaterialTheme.typography.titleMedium
+      )
     }
   }
 }
@@ -487,7 +495,12 @@ private fun IconPill(
     shadowElevation = 6.dp,
     tonalElevation = 1.dp
   ) {
-    IconButton(onClick = onClick, modifier = Modifier.size(44.dp)) {
+    IconButton(
+      onClick = onClick,
+      modifier = Modifier
+        .minimumInteractiveComponentSize()
+        .size(48.dp)
+    ) {
       Icon(
         imageVector = icon,
         contentDescription = contentDescription,
@@ -514,11 +527,12 @@ fun DetailsDrawerPanel(
   onToggleFavorite: () -> Unit,
   modifier: Modifier = Modifier
 ) {
+  val drawerPanelDescription = stringResource(id = R.string.details_panel_description)
   Surface(
     modifier = modifier
       .fillMaxHeight()
       .widthIn(min = 0.dp, max = preferredDrawerWidth(windowSizeClass))
-      .semantics { contentDescription = "Fiche produit détaillée" },
+      .semantics { contentDescription = drawerPanelDescription },
     tonalElevation = 0.dp,
     shadowElevation = 0.dp,
     shape = RoundedCornerShape(topStart = 28.dp, bottomStart = 28.dp),

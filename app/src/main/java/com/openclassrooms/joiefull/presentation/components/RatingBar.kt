@@ -13,9 +13,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.openclassrooms.joiefull.R
 
 @Composable
 fun RatingBar(
@@ -24,10 +29,21 @@ fun RatingBar(
   starSize: Dp = 18.dp,
   onRatingSelected: ((Int) -> Unit)? = null
 ) {
+  val ratingStateDescription = stringResource(id = R.string.rating_value, rating)
+  val semanticsModifier = if (onRatingSelected != null) {
+    modifier.semantics {
+      role = Role.Button
+      contentDescription = ratingStateDescription
+      stateDescription = ratingStateDescription
+    }
+  } else {
+    modifier.semantics {
+      contentDescription = ratingStateDescription
+    }
+  }
+
   Row(
-    modifier = modifier.semantics {
-      contentDescription = "Note $rating sur 5"
-    },
+    modifier = semanticsModifier,
     horizontalArrangement = Arrangement.spacedBy(4.dp)
   ) {
     repeat(5) { index ->
@@ -50,7 +66,7 @@ fun RatingBar(
         ) {
           Icon(
             imageVector = icon,
-            contentDescription = "Sélectionner $starNumber étoile(s)",
+            contentDescription = stringResource(id = R.string.rating_select_star, starNumber),
             tint = tint
           )
         }
