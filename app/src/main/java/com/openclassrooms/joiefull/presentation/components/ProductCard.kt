@@ -180,8 +180,8 @@ private fun RatingRow(
     Icon(
       imageVector = Icons.Rounded.Star,
       contentDescription = stringResource(id = R.string.product_rating, item.name),
-      tint = Color(0xFFFFA726),
-      modifier = Modifier.size(20.dp)
+      tint = RatingStarColor,
+      modifier = Modifier.size(RatingStarSize)
     )
     Text(
       text = String.format(Locale.FRANCE, "%.1f", item.rating.value),

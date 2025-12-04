@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.rounded.StarHalf
 import androidx.compose.material3.Icon
@@ -12,6 +12,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.stateDescription
@@ -22,11 +23,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.openclassrooms.joiefull.R
 
+val RatingStarColor = Color(0xFFFFA726)
+val RatingStarSize = 20.dp
+
 @Composable
 fun RatingBar(
   rating: Float,
   modifier: Modifier = Modifier,
-  starSize: Dp = 18.dp,
+  starSize: Dp = RatingStarSize,
   onRatingSelected: ((Int) -> Unit)? = null
 ) {
   val ratingStateDescription = stringResource(id = R.string.rating_value, rating)
@@ -49,13 +53,13 @@ fun RatingBar(
     repeat(5) { index ->
       val starNumber = index + 1
       val icon = when {
-        rating >= starNumber -> Icons.Filled.Star
+        rating >= starNumber -> Icons.Rounded.Star
         rating in (starNumber - 1f + 0.25f)..<starNumber.toFloat() -> Icons.Rounded.StarHalf
         else -> Icons.Outlined.Star
       }
       val isSelected = rating >= starNumber || icon == Icons.Rounded.StarHalf
       val tint = if (isSelected) {
-        MaterialTheme.colorScheme.primary
+        RatingStarColor
       } else {
         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
       }

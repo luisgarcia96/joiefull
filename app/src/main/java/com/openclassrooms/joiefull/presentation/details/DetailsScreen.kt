@@ -73,6 +73,8 @@ import androidx.compose.ui.text.input.ImeAction
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.openclassrooms.joiefull.presentation.components.RatingBar
+import com.openclassrooms.joiefull.presentation.components.RatingStarColor
+import com.openclassrooms.joiefull.presentation.components.RatingStarSize
 import java.text.NumberFormat
 import java.util.Locale
 import kotlinx.coroutines.flow.collectLatest
@@ -357,8 +359,8 @@ private fun DetailsInfo(
         Icon(
           imageVector = Icons.Rounded.Star,
           contentDescription = stringResource(id = R.string.rating_average),
-          tint = MaterialTheme.colorScheme.primary,
-          modifier = Modifier.size(18.dp)
+          tint = RatingStarColor,
+          modifier = Modifier.size(RatingStarSize)
         )
         Text(
           text = String.format(Locale.FRANCE, "%.1f", item.rating.value),
