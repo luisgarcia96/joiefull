@@ -26,4 +26,8 @@
     <string name="details_panel_description">Fiche produit détaillée</string>
     <string name="rating_average">Note moyenne</string>
     <string name="item_not_found">Article introuvable</string>
+    <string name="reviews_title">Avis de la communauté</string>
+    <string name="reviews_empty">Aucun avis pour le moment. Partagez le vôtre !</string>
+    <string name="review_no_comment">Avis sans commentaire</string>
+    <string name="review_note_value">Note %.1f\u202f/ 5</string>
 </resources>

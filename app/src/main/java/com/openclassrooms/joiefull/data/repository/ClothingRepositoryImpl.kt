@@ -5,6 +5,7 @@ import com.openclassrooms.joiefull.data.remote.ClothingRemoteDataSource
 import com.openclassrooms.joiefull.data.remote.model.ClothingItemDto
 import com.openclassrooms.joiefull.domain.model.ClothingItem
 import com.openclassrooms.joiefull.domain.model.Rating
+import com.openclassrooms.joiefull.domain.model.UserReview
 import com.openclassrooms.joiefull.domain.repository.ClothingRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -72,12 +73,12 @@ class ClothingRepositoryImpl(
 }
 
 private fun ClothingItemDto.toDomain(localDataSource: ClothingLocalDataSource): ClothingItem {
-  val savedRating = localDataSource.getRating(id)
-  val savedVoteCount = localDataSource.getRatingVoteCount(id)
+  val savedRatings = localDataSource.getRatings(id)
+  val savedVoteCount = savedRatings.size
   val totalVotes = rating.count + savedVoteCount
   val aggregatedRating = if (totalVotes > 0) {
     val baseTotal = rating.value * rating.count
-    val localTotal = savedRating?.rating ?: 0f
+    val localTotal = savedRatings.sumOf { it.rating.toDouble() }.toFloat()
     (baseTotal + localTotal) / totalVotes
   } else {
     0f
@@ -85,6 +86,9 @@ private fun ClothingItemDto.toDomain(localDataSource: ClothingLocalDataSource): 
   val totalShares = shares + localDataSource.getShareCount(id)
   val isFavorite = localDataSource.isFavorite(id)
   val likesWithFavorite = likes + if (isFavorite) 1 else 0
+  val reviews = savedRatings
+    .map { it.toDomainReview() }
+    .sortedByDescending { it.createdAt }
   return ClothingItem(
     id = id,
     name = name,
@@ -94,10 +98,17 @@ private fun ClothingItemDto.toDomain(localDataSource: ClothingLocalDataSource): 
     imageUrl = imageUrl,
     category = category,
     rating = Rating(value = aggregatedRating, count = totalVotes),
-    userRating = savedRating?.rating,
     likes = likesWithFavorite,
     shareCount = totalShares,
     isFavorite = isFavorite,
-    userComment = savedRating?.comment
+    reviews = reviews
+  )
+}
+
+private fun ClothingLocalDataSource.RatingEntry.toDomainReview(): UserReview {
+  return UserReview(
+    rating = rating,
+    comment = comment,
+    createdAt = createdAt
   )
 }

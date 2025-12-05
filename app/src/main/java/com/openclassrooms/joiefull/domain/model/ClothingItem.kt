@@ -12,9 +12,8 @@ data class ClothingItem(
   val imageUrl: String,
   val category: Category,
   val rating: Rating,
-  val userRating: Float? = null,
   val likes: Int,
   val shareCount: Int = 0,
   val isFavorite: Boolean,
-  val userComment: String? = null
+  val reviews: List<UserReview> = emptyList()
 )

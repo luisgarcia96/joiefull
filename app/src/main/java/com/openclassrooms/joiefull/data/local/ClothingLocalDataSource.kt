@@ -4,19 +4,24 @@ package com.openclassrooms.joiefull.data.local
  * Simple in-memory storage that simulates persistence for ratings and favorites.
  */
 class ClothingLocalDataSource {
-  private val ratings: MutableMap<String, RatingEntry> = mutableMapOf()
+  private val ratings: MutableMap<String, MutableList<RatingEntry>> = mutableMapOf()
   private val favorites: MutableSet<String> = mutableSetOf()
   private val shares: MutableMap<String, Int> = mutableMapOf()
 
   fun saveRating(itemId: String, rating: Float, comment: String) {
-    ratings[itemId] = RatingEntry(rating = rating, comment = comment)
+    val entries = ratings.getOrPut(itemId) { mutableListOf() }
+    entries.add(
+      RatingEntry(
+        rating = rating,
+        comment = comment,
+        createdAt = System.currentTimeMillis()
+      )
+    )
   }
 
-  fun getRating(itemId: String): RatingEntry? = ratings[itemId]
+  fun getRatings(itemId: String): List<RatingEntry> = ratings[itemId].orEmpty()
 
-  fun getRatingVoteCount(itemId: String): Int = if (ratings.containsKey(itemId)) 1 else 0
-
-  fun getComment(itemId: String): String? = ratings[itemId]?.comment
+  fun getRatingVoteCount(itemId: String): Int = ratings[itemId]?.size ?: 0
 
   fun toggleFavorite(itemId: String): Boolean {
     return if (favorites.contains(itemId)) {
@@ -40,6 +45,7 @@ class ClothingLocalDataSource {
 
   data class RatingEntry(
     val rating: Float,
-    val comment: String
+    val comment: String,
+    val createdAt: Long
   )
 }

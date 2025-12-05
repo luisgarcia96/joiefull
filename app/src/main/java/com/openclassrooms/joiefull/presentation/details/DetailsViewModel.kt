@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.openclassrooms.joiefull.di.AppContainer
 import com.openclassrooms.joiefull.domain.model.ClothingItem
+import com.openclassrooms.joiefull.domain.usecase.GetClothesUseCase
 import com.openclassrooms.joiefull.domain.usecase.GetClothingDetailsUseCase
 import com.openclassrooms.joiefull.domain.usecase.RegisterShareUseCase
 import com.openclassrooms.joiefull.domain.usecase.SaveRatingUseCase
@@ -17,6 +18,7 @@ import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -30,6 +32,7 @@ data class DetailsUiState(
 
 class DetailsViewModel(
   private val itemId: String,
+  private val getClothesUseCase: GetClothesUseCase,
   private val getClothingDetailsUseCase: GetClothingDetailsUseCase,
   private val saveRatingUseCase: SaveRatingUseCase,
   private val registerShareUseCase: RegisterShareUseCase,
@@ -40,19 +43,34 @@ class DetailsViewModel(
   val uiState: StateFlow<DetailsUiState> = _uiState.asStateFlow()
 
   init {
-    loadItem()
+    loadItem(resetInputs = true)
+    observeItemChanges()
   }
 
-  private fun loadItem() {
+  private fun loadItem(resetInputs: Boolean = false) {
     viewModelScope.launch {
       val item = getClothingDetailsUseCase(itemId)
-      _uiState.update {
-        it.copy(
+      _uiState.update { state ->
+        state.copy(
           isLoading = false,
           item = item,
-          userRating = item?.userRating ?: 0f,
-          comment = item?.userComment.orEmpty()
+          userRating = if (resetInputs) 0f else state.userRating,
+          comment = if (resetInputs) "" else state.comment
         )
+      }
+    }
+  }
+
+  private fun observeItemChanges() {
+    viewModelScope.launch {
+      getClothesUseCase().collectLatest { items ->
+        val updatedItem = items.firstOrNull { it.id == itemId } ?: return@collectLatest
+        _uiState.update { current ->
+          current.copy(
+            isLoading = false,
+            item = updatedItem
+          )
+        }
       }
     }
   }
@@ -70,7 +88,7 @@ class DetailsViewModel(
     if (current.item == null) return
     viewModelScope.launch {
       saveRatingUseCase(itemId, current.userRating, current.comment)
-      loadItem()
+      loadItem(resetInputs = true)
     }
   }
 
@@ -101,6 +119,7 @@ class DetailsViewModel(
         @Suppress("UNCHECKED_CAST")
         return DetailsViewModel(
           itemId = itemId,
+          getClothesUseCase = appContainer.getClothesUseCase,
           getClothingDetailsUseCase = appContainer.getClothingDetailsUseCase,
           saveRatingUseCase = appContainer.saveRatingUseCase,
           registerShareUseCase = appContainer.registerShareUseCase,

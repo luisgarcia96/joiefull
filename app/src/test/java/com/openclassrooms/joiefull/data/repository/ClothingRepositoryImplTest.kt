@@ -60,7 +60,7 @@ class ClothingRepositoryImplTest {
   }
 
   @Test
-  fun `saving rating merges with remote rating and keeps user rating`() = runTest {
+  fun `saving rating merges with remote rating and stores review`() = runTest {
     val dispatcher = StandardTestDispatcher(testScheduler)
     val repository = repository(
       dispatcher = dispatcher,
@@ -76,8 +76,32 @@ class ClothingRepositoryImplTest {
     // Aggregated rating: (4.0 * 2 + 5) / 3 = 4.333...
     assertEquals(4.33f, updated.rating.value, 0.01f)
     assertEquals(3, updated.rating.count)
-    assertEquals(5f, updated.userRating)
-    assertEquals("Great item", updated.userComment)
+    assertEquals(1, updated.reviews.size)
+    val review = updated.reviews.first()
+    assertEquals(5f, review.rating)
+    assertEquals("Great item", review.comment)
+  }
+
+  @Test
+  fun `multiple local ratings contribute to average`() = runTest {
+    val dispatcher = StandardTestDispatcher(testScheduler)
+    val repository = repository(
+      dispatcher = dispatcher,
+      baseRating = RatingDto(value = 3.5f, count = 2)
+    )
+
+    advanceUntilIdle()
+
+    repository.saveRating(id = "item-1", rating = 5f, comment = "Excellent")
+    repository.saveRating(id = "item-1", rating = 3f, comment = "Okay")
+    advanceUntilIdle()
+
+    val updated = repository.getClothingDetails("item-1")!!
+    // (3.5 * 2 + 5 + 3) / 4 = 3.75
+    assertEquals(3.75f, updated.rating.value, 0.01f)
+    assertEquals(4, updated.rating.count)
+    assertEquals(2, updated.reviews.size)
+    assertEquals(setOf("Excellent", "Okay"), updated.reviews.map { it.comment }.toSet())
   }
 
   private fun repository(

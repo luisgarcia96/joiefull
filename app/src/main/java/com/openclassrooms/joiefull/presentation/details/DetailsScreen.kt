@@ -75,6 +75,7 @@ import coil.request.ImageRequest
 import com.openclassrooms.joiefull.presentation.components.RatingBar
 import com.openclassrooms.joiefull.presentation.components.RatingStarColor
 import com.openclassrooms.joiefull.presentation.components.RatingStarSize
+import com.openclassrooms.joiefull.domain.model.UserReview
 import java.text.NumberFormat
 import java.util.Locale
 import kotlinx.coroutines.flow.collectLatest
@@ -424,6 +425,11 @@ private fun DetailsInfo(
       )
     }
 
+    ReviewSection(
+      reviews = item.reviews,
+      modifier = Modifier.fillMaxWidth()
+    )
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
       Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -480,6 +486,68 @@ private fun DetailsInfo(
       Text(
         text = stringResource(id = R.string.publish_review),
         style = MaterialTheme.typography.titleMedium
+      )
+    }
+  }
+}
+
+@Composable
+private fun ReviewSection(
+  reviews: List<UserReview>,
+  modifier: Modifier = Modifier
+) {
+  Column(
+    modifier = modifier,
+    verticalArrangement = Arrangement.spacedBy(12.dp)
+  ) {
+    Text(
+      text = stringResource(id = R.string.reviews_title),
+      style = MaterialTheme.typography.titleMedium
+    )
+    if (reviews.isEmpty()) {
+      Text(
+        text = stringResource(id = R.string.reviews_empty),
+        style = MaterialTheme.typography.bodyMedium.copy(
+          color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+        )
+      )
+    } else {
+      Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        reviews.forEach { review ->
+          ReviewCard(review = review)
+        }
+      }
+    }
+  }
+}
+
+@Composable
+private fun ReviewCard(
+  review: UserReview
+) {
+  Surface(
+    shape = RoundedCornerShape(14.dp),
+    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+    tonalElevation = 0.dp,
+    shadowElevation = 0.dp
+  ) {
+    Column(
+      modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+      verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+      RatingBar(
+        rating = review.rating,
+        starSize = 16.dp
+      )
+      Text(
+        text = review.comment.ifBlank { stringResource(id = R.string.review_no_comment) },
+        style = MaterialTheme.typography.bodyMedium
+      )
+      Text(
+        text = stringResource(id = R.string.review_note_value, review.rating),
+        style = MaterialTheme.typography.labelSmall.copy(
+          color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
       )
     }
   }
